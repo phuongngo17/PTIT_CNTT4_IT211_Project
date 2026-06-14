@@ -3,9 +3,8 @@ package org.example.badminton.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.badminton.model.dto.request.LoginRequest;
-import org.example.badminton.model.dto.request.RefreshTokenRequest;
-import org.example.badminton.model.dto.request.RegisterRequest;
+import org.example.badminton.exception.HttpBadRequestException;
+import org.example.badminton.model.dto.request.*;
 import org.example.badminton.model.dto.response.ApiDataResponse;
 import org.example.badminton.model.dto.response.JWTResponse;
 import org.example.badminton.model.dto.response.UserResponse;
@@ -51,22 +50,60 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiDataResponse<String>> logout(HttpServletRequest request) {
+    public ResponseEntity<ApiDataResponse<String>> logout(
+            HttpServletRequest request) {
+
         String token = extractToken(request);
+
         authService.logout(token);
-        return ResponseEntity.ok(new ApiDataResponse<>(
-                true,
-                "Đăng xuất thành công",
-                null,
-                HttpStatus.OK
-        ));
+
+        return ResponseEntity.ok(
+                new ApiDataResponse<>(
+                        true,
+                        "Đăng xuất thành công",
+                        null,
+                        HttpStatus.OK
+                )
+        );
     }
 
     private String extractToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring(7);
+
+        String authorization =
+                request.getHeader("Authorization");
+
+        if (authorization == null || authorization.isBlank()) {
+            throw new HttpBadRequestException(
+                    "Không tìm thấy Authorization Header"
+            );
         }
-        return null;
+
+        if (!authorization.startsWith("Bearer ")) {
+            throw new HttpBadRequestException(
+                    "Token không đúng định dạng Bearer"
+            );
+        }
+
+        return authorization.substring(7);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgot(@RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok("OK");
+    }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+
+        authService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                new ApiDataResponse<>(
+                        true,
+                        "Đổi mật khẩu thành công",
+                        null,
+                        HttpStatus.OK
+                )
+        );
     }
 }

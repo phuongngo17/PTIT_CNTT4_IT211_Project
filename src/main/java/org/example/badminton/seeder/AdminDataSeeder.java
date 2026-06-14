@@ -36,10 +36,10 @@ public class AdminDataSeeder implements CommandLineRunner {
         if (!userRepository.existsByUsername("admin")) {
             User user = User.builder()
                     .username("admin")
-                    .password(passwordEncoder.encode("admin123"))
+                    .password(passwordEncoder.encode("123456"))
                     .full_name("Quản trị viên")
                     .email("admin@badminton.com")
-                    .phone_number("0900000000")
+                    .phone_number("0939284787")
                     .role(RoleName.ADMIN.name())
                     .is_enable(true)
                     .build();

@@ -1,14 +1,14 @@
 INSERT INTO users(username,password,full_name,role,email,phone_number,is_enabled)
 VALUES
-    ('admin','admin123','System Admin','ROLE_ADMIN','admin@gmail.com','0900000001',true),
+    ('admin','admin123','System Admin','ADMIN','admin@gmail.com','0900000001',true),
 
-    ('Thuyn','123456','Nguyễn Văn Thủy','ROLE_MANAGER','thuyn@gmail.com','0900000002',true),
+    ('Thuyn','123456','Nguyễn Văn Thủy','MANAGER','thuyn@gmail.com','0900000002',true),
 
-    ('Binhnt','123456','Trần Văn Bình','ROLE_MANAGER','binhnt@gmail.com','0900000003',true),
+    ('Binhnt','123456','Trần Văn Bình','MANAGER','binhnt@gmail.com','0900000003',true),
 
-    ('Mylt','123456','Lệ Thị My','ROLE_CUSTOMER','mylt05@gmail.com','0900000004',true),
+    ('Mylt','123456','Lệ Thị My','CUSTOMER','mylt05@gmail.com','0900000004',true),
 
-    ('Dong','123456','Phạm Văn Đồng','ROLE_CUSTOMER','dongp@gmail.com','0900000005',true);
+    ('Dong','123456','Phạm Văn Đồng','CUSTOMER','dongp@gmail.com','0900000005',true);
 
 
 INSERT INTO courts(court_name,type,image_url,is_available,cluster_id)

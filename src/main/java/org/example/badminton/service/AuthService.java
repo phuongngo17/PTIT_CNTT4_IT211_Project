@@ -3,13 +3,13 @@ package org.example.badminton.service;
 import lombok.RequiredArgsConstructor;
 import org.example.badminton.exception.HttpBadRequestException;
 import org.example.badminton.model.constants.RoleName;
-import org.example.badminton.model.dto.request.ChangePasswordRequest;
-import org.example.badminton.model.dto.request.LoginRequest;
-import org.example.badminton.model.dto.request.RegisterRequest;
+import org.example.badminton.model.dto.request.*;
 import org.example.badminton.model.dto.response.JWTResponse;
 import org.example.badminton.model.dto.response.UserResponse;
+import org.example.badminton.model.entity.PasswordResetToken;
 import org.example.badminton.model.entity.RefreshToken;
 import org.example.badminton.model.entity.User;
+import org.example.badminton.repository.PasswordResetTokenRepository;
 import org.example.badminton.repository.UserRepository;
 import org.example.badminton.security.jwt.JWTProvider;
 import org.example.badminton.security.principal.CustomUserDetails;
@@ -21,7 +21,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +35,8 @@ public class AuthService {
     private final JWTProvider jwtProvider;
     private final RefreshTokenService refreshTokenService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -114,5 +118,52 @@ public class AuthService {
         );
 
         userRepository.save(user);
+    }
+    public void forgotPassword(ForgotPasswordRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+
+        // xoá token cũ nếu có
+        passwordResetTokenRepository.deleteByUser(user);
+
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+
+        passwordResetTokenRepository.save(resetToken);
+
+        String link = "http://localhost:3000/reset-password?token=" + token;
+
+        emailService.send(
+                user.getEmail(),
+                "Reset Password",
+                "Click vào link để đặt lại mật khẩu: " + link
+        );
+    }
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new HttpBadRequestException("Mật khẩu xác nhận không khớp");
+        }
+
+        PasswordResetToken tokenEntity = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new HttpBadRequestException("Token không hợp lệ"));
+
+        if (tokenEntity.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new HttpBadRequestException("Token đã hết hạn");
+        }
+
+        User user = tokenEntity.getUser();
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
+        userRepository.save(user);
+
+        passwordResetTokenRepository.delete(tokenEntity);
     }
 }

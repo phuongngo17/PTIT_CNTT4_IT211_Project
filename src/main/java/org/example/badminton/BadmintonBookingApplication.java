@@ -13,8 +13,4 @@ public class BadmintonBookingApplication {
         SpringApplication.run(BadmintonBookingApplication.class, args);
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
